@@ -1,25 +1,24 @@
-import agno
-import openai
+import google.generativeai as genai
 from dotenv import load_dotenv
 import os
 
 load_dotenv()
-openai.api_key = os.getenv("OPENAI_API_KEY")  # Load from .env file
 
-class OpenAIAgent(agno.Agent):
-    def act(self, observation):
-        response = openai.ChatCompletion.create(
-            model="gpt-3.5-turbo",
-            messages=[
-                {"role": "system", "content": "You are a helpful assistant."},
-                {"role": "user", "content": observation}
-            ]
-        )
-        return response.choices[0].message.content
+API_KEY = os.getenv("GOOGLE_API_KEY")
+MODEL_ID = os.getenv("GOOGLE_MODEL_ID", "gemini-pro")
+
+genai.configure(api_key=API_KEY)
+
+model = genai.GenerativeModel(MODEL_ID)
+system_prompt = "You are an enthusiastic news reporter with a flair for storytelling!"
+
+def get_response(user_input):
+    convo = model.start_chat(history=[{"role": "user", "parts": [system_prompt]}])
+    response = convo.send_message(user_input)
+    return response.text
 
 if __name__ == "__main__":
-    agent = OpenAIAgent()
     while True:
         user_input = input("You: ")
-        reply = agent.act(user_input)
+        reply = get_response(user_input)
         print("Agent:", reply)
